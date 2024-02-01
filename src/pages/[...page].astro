@@ -1,0 +1,175 @@
+---
+import Header from '@/components/Header.astro'
+import Layout from '@/layouts/Layout.astro'
+import type { GetStaticPaths } from 'astro'
+
+export const getStaticPaths = (({ paginate }) => {
+  const perguntas = [
+    {
+      pergunta:
+        'Qual time brasileiro conquistou a Copa Libertadores da América em 1992?',
+      respostas: ['São Paulo FC', 'Flamengo', 'Grêmio'],
+      correta: 0
+    },
+    {
+      pergunta:
+        'Quem foi o artilheiro da Copa do Mundo de 1994, onde o Brasil foi campeão?',
+      respostas: ['Romário', 'Bebeto', 'Ronaldo'],
+      correta: 0
+    },
+    {
+      pergunta: 'Em que ano o Palmeiras conquistou a Copa Rio Internacional?',
+      respostas: ['1997', '1999', '1998'],
+      correta: 2
+    },
+    {
+      pergunta:
+        'Qual clube brasileiro venceu a Supercopa Libertadores em 1993?',
+      respostas: ['Cruzeiro', 'Internacional', 'Vasco da Gama'],
+      correta: 0
+    },
+    {
+      pergunta:
+        'Quem foi o técnico da Seleção Brasileira na Copa do Mundo de 1998?',
+      respostas: ['Vanderlei Luxemburgo', 'Carlos Alberto Parreira', 'Felipão'],
+      correta: 1
+    },
+    {
+      pergunta:
+        'Qual jogador brasileiro foi eleito o Melhor do Mundo pela FIFA em 1996?',
+      respostas: ['Ronaldo', 'Romário', 'Rivaldo'],
+      correta: 2
+    },
+    {
+      pergunta: 'Em 1995, qual clube brasileiro venceu a Taça Conmebol?',
+      respostas: ['Santos FC', 'Grêmio', 'Fluminense'],
+      correta: 0
+    },
+    {
+      pergunta: 'Qual foi o primeiro time a vencer a Copa do Brasil em 1990?',
+      respostas: ['Corinthians', 'Flamengo', 'Vasco da Gama'],
+      correta: 1
+    },
+    {
+      pergunta:
+        'Em 1994, qual jogador brasileiro marcou um gol decisivo nas quartas de final da Copa do Mundo?',
+      respostas: ['Bebeto', 'Romário', 'Zinho'],
+      correta: 0
+    },
+    {
+      pergunta: 'Qual clube brasileiro foi campeão da Copa CONMEBOL em 1998?',
+      respostas: ['Atlético Mineiro', 'Corinthians', 'Fluminense'],
+      correta: 0
+    }
+  ]
+
+  return paginate(perguntas, { pageSize: 1 })
+}) satisfies GetStaticPaths
+
+const { page } = Astro.props
+const [quiz] = page.data
+---
+
+<Layout>
+  <main>
+    <Header />
+    <div id="quiz" transition:animate="slide">
+      <div class="quiz-item">
+        <h3 data-id={page.currentPage}>{quiz.pergunta}</h3>
+        <dl>
+          {
+            quiz.respostas.map((r, rid) => (
+              <dt>
+                <input
+                  type="radio"
+                  name={`pergunta-${page.currentPage}`}
+                  value={rid}
+                />
+                <span>{r}</span>
+              </dt>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+
+    <div class="navigation">
+      {
+        page.url.prev && (
+          <a class="prev" href={page.url.prev}>
+            prev
+          </a>
+        )
+      }
+      {
+        page.url.next && (
+          <a class="next" href={page.url.next}>
+            next
+          </a>
+        )
+      }
+    </div>
+
+    <div id="acertos">
+      <strong>Acertos</strong>
+      <span>0 de 10</span>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ quiz, page }}>
+  const values = JSON.parse(localStorage.getItem('quiz::values')) || {}
+
+  let selected
+  const count = () =>
+    Object.keys(values).filter(val => values[val].isCorrect).length
+
+  Object.keys(values).forEach(() => {
+    const current = values[page.currentPage]
+    selected = current?.selected
+  })
+
+  const total = document.querySelector('#acertos span')
+  total.textContent = `${count()} de 10`
+
+  const inputs = document.querySelectorAll('input')
+  for (let input of inputs) {
+    if (input.value == selected) {
+      input.checked = true
+    }
+
+    input.onchange = e => {
+      values[page.currentPage] = {
+        selected: e.target.value,
+        isCorrect: e.target.value == quiz.correta
+      }
+      localStorage.setItem('quiz::values', JSON.stringify(values))
+      total.textContent = `${count()} de 10`
+    }
+  }
+</script>
+
+<style>
+  .navigation {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 24px;
+
+    font-size: 14px;
+  }
+
+  .navigation a {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: #1e293b;
+    color: #e2e8f0;
+    text-decoration: none;
+  }
+
+  .navigation a.next {
+    margin-left: auto;
+  }
+</style>
